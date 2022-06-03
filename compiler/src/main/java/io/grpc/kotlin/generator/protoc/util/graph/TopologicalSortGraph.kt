@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.grpc.kotlin.generator.protoc.util.graph
+package fr.quatresh.kotlin.grpc.api.generator.protoc.util.graph
 
 import com.google.common.annotations.Beta
 import com.google.common.base.Preconditions.checkArgument
 import com.google.common.graph.Graph
-import io.grpc.kotlin.generator.protoc.util.sort.PartialOrdering
-import io.grpc.kotlin.generator.protoc.util.sort.TopologicalSort.sortLexicographicallyLeast
+import fr.quatresh.kotlin.grpc.api.generator.protoc.util.sort.PartialOrdering
+import fr.quatresh.kotlin.grpc.api.generator.protoc.util.sort.TopologicalSort.sortLexicographicallyLeast
 
 @Beta
 object TopologicalSortGraph {

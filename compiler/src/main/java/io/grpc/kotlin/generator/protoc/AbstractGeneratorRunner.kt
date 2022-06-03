@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.common.annotations.VisibleForTesting
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet
@@ -31,65 +31,65 @@ import java.nio.file.Path
 
 /** Superclass for generators. */
 abstract class AbstractGeneratorRunner {
-  abstract fun generateCodeForFile(file: FileDescriptor): List<FileSpec>
+    abstract fun generateCodeForFile(file: FileDescriptor): List<FileSpec>
 
-  @VisibleForTesting
-  fun mainAsProtocPlugin(input: InputStream, output: OutputStream) {
-    val generatorRequest = try {
-      input.buffered().use {
-        PluginProtos.CodeGeneratorRequest.parseFrom(it)
-      }
-    } catch (failure: Exception) {
-      throw IOException(
-        """
+    @VisibleForTesting
+    fun mainAsProtocPlugin(input: InputStream, output: OutputStream) {
+        val generatorRequest = try {
+            input.buffered().use {
+                PluginProtos.CodeGeneratorRequest.parseFrom(it)
+            }
+        } catch (failure: Exception) {
+            throw IOException(
+                """
         Attempted to run proto extension generator as protoc plugin, but could not read
         CodeGeneratorRequest.
         """.trimIndent(),
-        failure
-      )
+                failure
+            )
+        }
+        output.buffered().use {
+            CodeGenerators.codeGeneratorResponse {
+                val descriptorMap = CodeGenerators.descriptorMap(generatorRequest.protoFileList)
+                generatorRequest.filesToGenerate
+                    .map(descriptorMap::getValue) // compiled descriptors to generate code for
+                    .flatMap(::generateCodeForFile) // generated extensions
+            }.writeTo(it)
+        }
     }
-    output.buffered().use {
-      CodeGenerators.codeGeneratorResponse {
-        val descriptorMap = CodeGenerators.descriptorMap(generatorRequest.protoFileList)
-        generatorRequest.filesToGenerate
-          .map(descriptorMap::getValue) // compiled descriptors to generate code for
-          .flatMap(::generateCodeForFile) // generated extensions
-      }.writeTo(it)
+
+    @VisibleForTesting
+    fun mainAsCommandLine(args: Array<String>, fs: FileSystem) {
+        val dashIndex = args.indexOf("--")
+        val outputDir = fs.getPath(args[0])
+        val toGenerateExtensionsFor = args.slice(1 until dashIndex)
+        val inTransitiveClosure = args.drop(dashIndex + 1)
+
+        val fileNameToDescriptorSet =
+            inTransitiveClosure.associateWith { readFileDescriptorSet(fs.getPath(it)) }
+
+        val descriptorMap = CodeGenerators.descriptorMapFromUnsorted(
+            fileNameToDescriptorSet.values.flatMap { it.fileList }
+        )
+
+        toGenerateExtensionsFor
+            .asSequence()
+            .map { fileNameToDescriptorSet.getValue(it) } // descriptor sets to output
+            .flatMap { it.fileList.asSequence() } // descriptors to output
+            .map { it.fileName } // file names of descriptors to output
+            .map { descriptorMap.getValue(it) } // compiled descriptors to generate code for
+            .flatMap { generateCodeForFile(it).asSequence() } // generated extensions
+            .forEach { it.writeTo(outputDir) } // write to output directory
     }
-  }
 
-  @VisibleForTesting
-  fun mainAsCommandLine(args: Array<String>, fs: FileSystem) {
-    val dashIndex = args.indexOf("--")
-    val outputDir = fs.getPath(args[0])
-    val toGenerateExtensionsFor = args.slice(1 until dashIndex)
-    val inTransitiveClosure = args.drop(dashIndex + 1)
-
-    val fileNameToDescriptorSet =
-      inTransitiveClosure.associateWith { readFileDescriptorSet(fs.getPath(it)) }
-
-    val descriptorMap = CodeGenerators.descriptorMapFromUnsorted(
-      fileNameToDescriptorSet.values.flatMap { it.fileList }
-    )
-
-    toGenerateExtensionsFor
-      .asSequence()
-      .map { fileNameToDescriptorSet.getValue(it) } // descriptor sets to output
-      .flatMap { it.fileList.asSequence() } // descriptors to output
-      .map { it.fileName } // file names of descriptors to output
-      .map { descriptorMap.getValue(it) } // compiled descriptors to generate code for
-      .flatMap { generateCodeForFile(it).asSequence() } // generated extensions
-      .forEach { it.writeTo(outputDir) } // write to output directory
-  }
-
-  fun doMain(args: Array<String>) {
-    if (args.isEmpty()) {
-      mainAsProtocPlugin(System.`in`, System.out)
-    } else {
-      mainAsCommandLine(args, FileSystems.getDefault())
+    fun doMain(args: Array<String>) {
+        if (args.isEmpty()) {
+            mainAsProtocPlugin(System.`in`, System.out)
+        } else {
+            mainAsCommandLine(args, FileSystems.getDefault())
+        }
     }
-  }
 
-  private fun readFileDescriptorSet(path: Path): FileDescriptorSet =
-    Files.newInputStream(path).buffered().use { FileDescriptorSet.parseFrom(it) }
+    private fun readFileDescriptorSet(path: Path): FileDescriptorSet =
+        Files.newInputStream(path).buffered().use { FileDescriptorSet.parseFrom(it) }
 }

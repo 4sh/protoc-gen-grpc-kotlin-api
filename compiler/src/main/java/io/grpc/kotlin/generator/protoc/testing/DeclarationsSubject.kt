@@ -14,61 +14,61 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc.testing
+package fr.quatresh.kotlin.grpc.api.generator.protoc.testing
 
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
 import com.google.common.truth.Truth.assertAbout
 import com.squareup.kotlinpoet.FileSpec
-import io.grpc.kotlin.generator.protoc.Declarations
+import fr.quatresh.kotlin.grpc.api.generator.protoc.Declarations
 
 val declarationsSubjectFactory: Subject.Factory<DeclarationsSubject, Declarations> =
-  Subject.Factory(::DeclarationsSubject)
+    Subject.Factory(::DeclarationsSubject)
 
 /** Make Truth assertions about [declarations]. */
 fun assertThat(declarations: Declarations): DeclarationsSubject =
-  assertAbout(declarationsSubjectFactory).that(declarations)
+    assertAbout(declarationsSubjectFactory).that(declarations)
 
 /** A Truth subject for [Declarations]. */
 class DeclarationsSubject(
-  failureMetadata: FailureMetadata,
-  private val actual: Declarations
+    failureMetadata: FailureMetadata,
+    private val actual: Declarations
 ) : Subject(failureMetadata, actual) {
-  fun generatesTopLevel(indentedCode: String) {
-    val actualCode =
-      FileSpec.builder("", "MyDeclarations.kt")
-        .apply { actual.writeOnlyTopLevel(this) }
-        .build()
-    check("topLevel").about(fileSpecs).that(actualCode).generates(indentedCode)
-  }
+    fun generatesTopLevel(indentedCode: String) {
+        val actualCode =
+            FileSpec.builder("", "MyDeclarations.kt")
+                .apply { actual.writeOnlyTopLevel(this) }
+                .build()
+        check("topLevel").about(fileSpecs).that(actualCode).generates(indentedCode)
+    }
 
-  fun generatesEnclosed(indentedCode: String) {
-    val actualCode =
-      FileSpec.builder("", "MyDeclarations.kt")
-        .apply { actual.writeToEnclosingFile(this) }
-        .build()
-    check("enclosed").about(fileSpecs).that(actualCode).generates(indentedCode)
-  }
+    fun generatesEnclosed(indentedCode: String) {
+        val actualCode =
+            FileSpec.builder("", "MyDeclarations.kt")
+                .apply { actual.writeToEnclosingFile(this) }
+                .build()
+        check("enclosed").about(fileSpecs).that(actualCode).generates(indentedCode)
+    }
 
-  fun generatesNoTopLevelMembers() {
-    val actualCode =
-      FileSpec.builder("", "MyDeclarations.kt")
-        .apply { actual.writeOnlyTopLevel(this) }
-        .build()
-    check("topLevel")
-      .withMessage("top level declarations: %s", actualCode)
-      .that(actual.hasTopLevelDeclarations)
-      .isFalse()
-  }
+    fun generatesNoTopLevelMembers() {
+        val actualCode =
+            FileSpec.builder("", "MyDeclarations.kt")
+                .apply { actual.writeOnlyTopLevel(this) }
+                .build()
+        check("topLevel")
+            .withMessage("top level declarations: %s", actualCode)
+            .that(actual.hasTopLevelDeclarations)
+            .isFalse()
+    }
 
-  fun generatesNoEnclosedMembers() {
-    val actualCode =
-      FileSpec.builder("", "MyDeclarations.kt")
-        .apply { actual.writeToEnclosingFile(this) }
-        .build()
-    check("enclosed")
-      .withMessage("enclosed declarations: %s", actualCode)
-      .that(actual.hasEnclosingScopeDeclarations)
-      .isFalse()
-  }
+    fun generatesNoEnclosedMembers() {
+        val actualCode =
+            FileSpec.builder("", "MyDeclarations.kt")
+                .apply { actual.writeToEnclosingFile(this) }
+                .build()
+        check("enclosed")
+            .withMessage("enclosed declarations: %s", actualCode)
+            .that(actual.hasEnclosingScopeDeclarations)
+            .isFalse()
+    }
 }

@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.protobuf.DescriptorProtos.ServiceDescriptorProto
 import com.google.protobuf.Descriptors.ServiceDescriptor
 
 /** Represents the unqualified name of an RPC service in a proto file, in CamelCase. */
 data class ProtoServiceName(val name: String) : CharSequence by name {
-  fun toClassSimpleName(): ClassSimpleName = ClassSimpleName(name)
+    fun toClassSimpleName(): ClassSimpleName = ClassSimpleName(name)
 
-  override fun toString() = name
+    override fun toString() = name
 }
 
 val ServiceDescriptor.serviceName: ProtoServiceName
-  get() = toProto().serviceName
+    get() = toProto().serviceName
 
 val ServiceDescriptorProto.serviceName: ProtoServiceName
-  get() = ProtoServiceName(name)
+    get() = ProtoServiceName(name)

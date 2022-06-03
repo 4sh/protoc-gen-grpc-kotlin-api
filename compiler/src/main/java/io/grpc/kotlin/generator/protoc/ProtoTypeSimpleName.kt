@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.protobuf.DescriptorProtos.DescriptorProto
 import com.google.protobuf.DescriptorProtos.EnumDescriptorProto
@@ -23,23 +23,23 @@ import com.google.protobuf.Descriptors.EnumDescriptor
 
 /** Represents the unqualified name of a proto message or enum, which is in UpperCamelCase. */
 data class ProtoTypeSimpleName(val name: String) : CharSequence by name {
-  fun toClassSimpleName(): ClassSimpleName = ClassSimpleName(name)
+    fun toClassSimpleName(): ClassSimpleName = ClassSimpleName(name)
 
-  override fun toString() = name
+    override fun toString() = name
 }
 
 /** Returns the name of a message type, given its descriptor. */
 val Descriptor.simpleName: ProtoTypeSimpleName
-  get() = toProto().simpleName
+    get() = toProto().simpleName
 
 /** Returns the name of a message type, given its descriptor in proto form. */
 val DescriptorProto.simpleName: ProtoTypeSimpleName
-  get() = ProtoTypeSimpleName(name)
+    get() = ProtoTypeSimpleName(name)
 
 /** Returns the name of a proto enum type, given its descriptor. */
 val EnumDescriptor.simpleName: ProtoTypeSimpleName
-  get() = toProto().simpleName
+    get() = toProto().simpleName
 
 /** Returns the name of a proto enum type, given its descriptor in proto form. */
 val EnumDescriptorProto.simpleName: ProtoTypeSimpleName
-  get() = ProtoTypeSimpleName(name)
+    get() = ProtoTypeSimpleName(name)

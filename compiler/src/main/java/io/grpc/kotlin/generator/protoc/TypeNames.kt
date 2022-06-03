@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.protobuf.ByteString
 import com.squareup.kotlinpoet.asTypeName
 
 object TypeNames {
-  internal val ITERABLE = Iterable::class.asTypeName()
-  internal val PAIR = Pair::class.asTypeName()
-  internal val MAP = Map::class.asTypeName()
-  internal val STRING = String::class.asTypeName()
-  val BYTE_STRING = ByteString::class.asTypeName()
+    internal val ITERABLE = Iterable::class.asTypeName()
+    internal val PAIR = Pair::class.asTypeName()
+    internal val MAP = Map::class.asTypeName()
+    internal val STRING = String::class.asTypeName()
+    val BYTE_STRING = ByteString::class.asTypeName()
 }

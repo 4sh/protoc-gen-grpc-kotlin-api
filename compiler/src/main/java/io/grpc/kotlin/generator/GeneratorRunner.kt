@@ -18,28 +18,27 @@ package io.grpc.kotlin.generator
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.FileSpec
-import io.grpc.kotlin.generator.protoc.AbstractGeneratorRunner
-import io.grpc.kotlin.generator.protoc.GeneratorConfig
-import io.grpc.kotlin.generator.protoc.JavaPackagePolicy
+import fr.quatresh.kotlin.grpc.api.generator.protoc.AbstractGeneratorRunner
+import fr.quatresh.kotlin.grpc.api.generator.protoc.GeneratorConfig
+import fr.quatresh.kotlin.grpc.api.generator.protoc.JavaPackagePolicy
 
 /** Main runner for code generation for Kotlin gRPC APIs. */
-object GeneratorRunner: AbstractGeneratorRunner() {
-  @JvmStatic
-  fun main(args: Array<String>) = super.doMain(args)
+object GeneratorRunner : AbstractGeneratorRunner() {
+    @JvmStatic
+    fun main(args: Array<String>) = super.doMain(args)
 
-  private val config = GeneratorConfig(JavaPackagePolicy.OPEN_SOURCE, false)
+    private val config = GeneratorConfig(JavaPackagePolicy.OPEN_SOURCE, false)
 
-  val generator = ProtoFileCodeGenerator(
-    generators = listOf(
-      ::ServiceNameGenerator,
-      ::GrpcClientStubGenerator,
-      ::GrpcCoroutineServerGenerator,
-      ::TopLevelConstantsGenerator
-    ),
-    config = config,
-    topLevelSuffix = "GrpcKt"
-  )
+    val generator = ProtoFileCodeGenerator(
+        generators = listOf(
+            ::ServiceNameGenerator,
+            ::ApiInterfaceCodeGenerator,
+            ::TopLevelConstantsGenerator
+        ),
+        config = config,
+        topLevelSuffix = "GrpcKt"
+    )
 
-  override fun generateCodeForFile(file: FileDescriptor): List<FileSpec> =
-    listOfNotNull(generator.generateCodeForFile(file))
+    override fun generateCodeForFile(file: FileDescriptor): List<FileSpec> =
+        listOfNotNull(generator.generateCodeForFile(file))
 }

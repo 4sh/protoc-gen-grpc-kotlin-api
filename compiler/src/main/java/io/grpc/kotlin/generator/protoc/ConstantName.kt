@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.MemberName
 
 /** Represents a name of an constant, in UPPER_UNDERSCORE. */
 data class ConstantName(val name: String) : CharSequence by name {
-  override fun toString() = name
+    override fun toString() = name
 }
 
 /** Returns the fully qualified name of this constant, as a member of the specified class. */
 fun ClassName.member(constantName: ConstantName): MemberName =
-  MemberName(this, constantName.name)
+    MemberName(this, constantName.name)

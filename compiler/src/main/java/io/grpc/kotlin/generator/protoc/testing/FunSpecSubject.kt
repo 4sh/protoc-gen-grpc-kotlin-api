@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc.testing
+package fr.quatresh.kotlin.grpc.api.generator.protoc.testing
 
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
@@ -28,12 +28,12 @@ fun assertThat(funSpec: FunSpec): FunSpecSubject = Truth.assertAbout(funSpecs).t
 
 /** A Truth subject for [FunSpec]. */
 class FunSpecSubject(
-  failureMetadata: FailureMetadata,
-  private val actual: FunSpec
+    failureMetadata: FailureMetadata,
+    private val actual: FunSpec
 ) : Subject(failureMetadata, actual) {
-  fun generates(indentedCode: String) {
-    val expectedCode = indentedCode.trimIndent()
-    val actualCode = actual.toString().trim()
-    check("code").that(actualCode).isEqualTo(expectedCode)
-  }
+    fun generates(indentedCode: String) {
+        val expectedCode = indentedCode.trimIndent()
+        val actualCode = actual.toString().trim()
+        check("code").that(actualCode).isEqualTo(expectedCode)
+    }
 }

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.protobuf.Descriptors.EnumValueDescriptor
 
 /** Represents the unqualified name of a proto enum constant, in UPPER_UNDERSCORE. */
 data class ProtoEnumValueName(val name: String) : CharSequence by name {
-  val asConstantName: ConstantName
-    get() = ConstantName(name)
+    val asConstantName: ConstantName
+        get() = ConstantName(name)
 
-  override fun toString() = name
+    override fun toString() = name
 }
 
 /** Returns the name of a proto enum constant. */
 val EnumValueDescriptor.protoEnumValueName: ProtoEnumValueName
-  get() = ProtoEnumValueName(name)
+    get() = ProtoEnumValueName(name)

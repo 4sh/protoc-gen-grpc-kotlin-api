@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc.testing
+package fr.quatresh.kotlin.grpc.api.generator.protoc.testing
 
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
@@ -28,16 +28,16 @@ fun assertThat(fileSpec: FileSpec): FileSpecSubject = assertAbout(fileSpecs).tha
 
 /** A Truth subject for [FileSpec]. */
 class FileSpecSubject(
-  failureMetadata: FailureMetadata,
-  private val actual: FileSpec
+    failureMetadata: FailureMetadata,
+    private val actual: FileSpec
 ) : Subject(failureMetadata, actual) {
-  fun generates(indentedCode: String) {
-    val expectedCode = indentedCode.trimIndent()
-    val actualCode = actual.toString().trim().lines().joinToString("\n") { it.trimEnd() }
-    check("code").that(actualCode).isEqualTo(expectedCode)
-  }
+    fun generates(indentedCode: String) {
+        val expectedCode = indentedCode.trimIndent()
+        val actualCode = actual.toString().trim().lines().joinToString("\n") { it.trimEnd() }
+        check("code").that(actualCode).isEqualTo(expectedCode)
+    }
 
-  fun hasName(name: String) {
-    check("name").that(actual.name).isEqualTo(name)
-  }
+    fun hasName(name: String) {
+        check("name").that(actual.name).isEqualTo(name)
+    }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.common.base.Throwables
 import com.google.common.graph.GraphBuilder
@@ -22,64 +22,64 @@ import com.google.protobuf.DescriptorProtos.FileDescriptorProto
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.google.protobuf.compiler.PluginProtos
 import com.squareup.kotlinpoet.FileSpec
-import io.grpc.kotlin.generator.protoc.util.graph.TopologicalSortGraph
+import fr.quatresh.kotlin.grpc.api.generator.protoc.util.graph.TopologicalSortGraph
 
 internal object CodeGenerators {
-  fun descriptorMap(
-    topologicalSortedProtoFileList: List<FileDescriptorProto>
-  ): Map<ProtoFileName, FileDescriptor> {
-    val descriptorsByName = mutableMapOf<ProtoFileName, FileDescriptor>()
-    for (protoFile in topologicalSortedProtoFileList) {
-      // we should have visited all the dependencies, so they should be present in the map
-      val dependencies = protoFile.dependencyNames.map(descriptorsByName::getValue)
+    fun descriptorMap(
+        topologicalSortedProtoFileList: List<FileDescriptorProto>
+    ): Map<ProtoFileName, FileDescriptor> {
+        val descriptorsByName = mutableMapOf<ProtoFileName, FileDescriptor>()
+        for (protoFile in topologicalSortedProtoFileList) {
+            // we should have visited all the dependencies, so they should be present in the map
+            val dependencies = protoFile.dependencyNames.map(descriptorsByName::getValue)
 
-      // build and link the descriptor for this file to its dependencies
-      val fileDescriptor = FileDescriptor.buildFrom(protoFile, dependencies.toTypedArray())
+            // build and link the descriptor for this file to its dependencies
+            val fileDescriptor = FileDescriptor.buildFrom(protoFile, dependencies.toTypedArray())
 
-      descriptorsByName[protoFile.fileName] = fileDescriptor
-    }
-    return descriptorsByName
-  }
-
-  fun descriptorMapFromUnsorted(
-    protoFileList: List<FileDescriptorProto>
-  ): Map<ProtoFileName, FileDescriptor> {
-    val byFileName = protoFileList.associateBy { it.fileName }
-
-    val depGraph =
-      GraphBuilder
-        .directed()
-        .expectedNodeCount(protoFileList.size)
-        .build<ProtoFileName>()
-
-    byFileName.keys.forEach { depGraph.addNode(it) }
-
-    for ((fileName, fileDescriptorProto) in byFileName) {
-      for (dep in fileDescriptorProto.dependencyNames) {
-        depGraph.putEdge(dep, fileName)
-      }
+            descriptorsByName[protoFile.fileName] = fileDescriptor
+        }
+        return descriptorsByName
     }
 
-    return descriptorMap(
-      TopologicalSortGraph.topologicalOrdering(depGraph)
-        .map { byFileName.getValue(it) }
-    )
-  }
+    fun descriptorMapFromUnsorted(
+        protoFileList: List<FileDescriptorProto>
+    ): Map<ProtoFileName, FileDescriptor> {
+        val byFileName = protoFileList.associateBy { it.fileName }
 
-  fun toCodeGeneratorResponseFile(fileSpec: FileSpec): PluginProtos.CodeGeneratorResponse.File =
-    PluginProtos.CodeGeneratorResponse.File.newBuilder().also {
-      it.name = fileSpec.path.toString()
-      it.content = fileSpec.toString()
-    }.build()
+        val depGraph =
+            GraphBuilder
+                .directed()
+                .expectedNodeCount(protoFileList.size)
+                .build<ProtoFileName>()
 
-  inline fun codeGeneratorResponse(build: () -> List<FileSpec>): PluginProtos.CodeGeneratorResponse {
-    val builder = PluginProtos.CodeGeneratorResponse.newBuilder()
-    try {
-      builder.setSupportedFeatures(PluginProtos.CodeGeneratorResponse.Feature.FEATURE_PROTO3_OPTIONAL_VALUE.toLong())
-        .addAllFile(build().map { toCodeGeneratorResponseFile(it) })
-    } catch (failure: Exception) {
-      builder.error = Throwables.getStackTraceAsString(failure)
+        byFileName.keys.forEach { depGraph.addNode(it) }
+
+        for ((fileName, fileDescriptorProto) in byFileName) {
+            for (dep in fileDescriptorProto.dependencyNames) {
+                depGraph.putEdge(dep, fileName)
+            }
+        }
+
+        return descriptorMap(
+            TopologicalSortGraph.topologicalOrdering(depGraph)
+                .map { byFileName.getValue(it) }
+        )
     }
-    return builder.build()
-  }
+
+    fun toCodeGeneratorResponseFile(fileSpec: FileSpec): PluginProtos.CodeGeneratorResponse.File =
+        PluginProtos.CodeGeneratorResponse.File.newBuilder().also {
+            it.name = fileSpec.path.toString()
+            it.content = fileSpec.toString()
+        }.build()
+
+    inline fun codeGeneratorResponse(build: () -> List<FileSpec>): PluginProtos.CodeGeneratorResponse {
+        val builder = PluginProtos.CodeGeneratorResponse.newBuilder()
+        try {
+            builder.setSupportedFeatures(PluginProtos.CodeGeneratorResponse.Feature.FEATURE_PROTO3_OPTIONAL_VALUE.toLong())
+                .addAllFile(build().map { toCodeGeneratorResponseFile(it) })
+        } catch (failure: Exception) {
+            builder.error = Throwables.getStackTraceAsString(failure)
+        }
+        return builder.build()
+    }
 }

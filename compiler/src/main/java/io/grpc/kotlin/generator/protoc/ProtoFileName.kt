@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto
 import com.google.protobuf.Descriptors.FileDescriptor
@@ -25,22 +25,22 @@ import com.google.protobuf.compiler.PluginProtos
  * lower_underscore naming.
  */
 data class ProtoFileName(private val path: String) : Comparable<ProtoFileName> {
-  val name: String
-    get() = path.substringAfterLast('/').removeSuffix(".proto")
+    val name: String
+        get() = path.substringAfterLast('/').removeSuffix(".proto")
 
-  override operator fun compareTo(other: ProtoFileName): Int = path.compareTo(other.path)
+    override operator fun compareTo(other: ProtoFileName): Int = path.compareTo(other.path)
 }
 
 /** Returns the filename of the specified file descriptor in proto form. */
 val FileDescriptorProto.fileName: ProtoFileName
-  get() = ProtoFileName(name)
+    get() = ProtoFileName(name)
 
 /** Returns the filename of the specified file descriptor. */
 val FileDescriptor.fileName: ProtoFileName
-  get() = toProto().fileName
+    get() = toProto().fileName
 
 val FileDescriptorProto.dependencyNames: List<ProtoFileName>
-  get() = dependencyList.map(::ProtoFileName)
+    get() = dependencyList.map(::ProtoFileName)
 
 val PluginProtos.CodeGeneratorRequest.filesToGenerate: List<ProtoFileName>
-  get() = fileToGenerateList.map(::ProtoFileName)
+    get() = fileToGenerateList.map(::ProtoFileName)

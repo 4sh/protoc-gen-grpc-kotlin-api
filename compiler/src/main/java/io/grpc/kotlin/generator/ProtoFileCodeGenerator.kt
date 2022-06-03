@@ -19,59 +19,59 @@ package io.grpc.kotlin.generator
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
-import io.grpc.kotlin.generator.protoc.GeneratorConfig
-import io.grpc.kotlin.generator.protoc.builder
-import io.grpc.kotlin.generator.protoc.declarations
-import io.grpc.kotlin.generator.protoc.objectBuilder
-import io.grpc.kotlin.generator.protoc.outerClassSimpleName
-import io.grpc.kotlin.generator.protoc.serviceName
+import fr.quatresh.kotlin.grpc.api.generator.protoc.GeneratorConfig
+import fr.quatresh.kotlin.grpc.api.generator.protoc.builder
+import fr.quatresh.kotlin.grpc.api.generator.protoc.declarations
+import fr.quatresh.kotlin.grpc.api.generator.protoc.objectBuilder
+import fr.quatresh.kotlin.grpc.api.generator.protoc.outerClassSimpleName
+import fr.quatresh.kotlin.grpc.api.generator.protoc.serviceName
 
 /**
  * Given a list of [ServiceCodeGenerator] factories, generates (optionally) a [FileSpec] of the
  * generated code.
  */
 class ProtoFileCodeGenerator(
-  generators: List<(GeneratorConfig) -> ServiceCodeGenerator>,
-  private val config: GeneratorConfig,
-  private val topLevelSuffix: String
+    generators: List<(GeneratorConfig) -> ServiceCodeGenerator>,
+    private val config: GeneratorConfig,
+    private val topLevelSuffix: String
 ) {
 
-  private val generators = generators.map { it(config) }
+    private val generators = generators.map { it(config) }
 
-  fun generateCodeForFile(fileDescriptor: FileDescriptor): FileSpec? = with(config) {
-    val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
+    fun generateCodeForFile(fileDescriptor: FileDescriptor): FileSpec? = with(config) {
+        val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
 
-    var wroteAnything = false
-    val fileBuilder = FileSpec.builder(javaPackage(fileDescriptor), outerTypeName)
+        var wroteAnything = false
+        val fileBuilder = FileSpec.builder(javaPackage(fileDescriptor), outerTypeName)
 
-    for (service in fileDescriptor.services) {
-      val serviceDecls = declarations {
-        for (generator in generators) {
-          merge(generator.generate(service))
-        }
-      }
+        for (service in fileDescriptor.services) {
+            val serviceDecls = declarations {
+                for (generator in generators) {
+                    merge(generator.generate(service))
+                }
+            }
 
-      if (serviceDecls.hasEnclosingScopeDeclarations) {
-        wroteAnything = true
-        val serviceObjectBuilder =
-          TypeSpec
-            .objectBuilder(service.serviceName.toClassSimpleName().withSuffix(topLevelSuffix))
-            .addKdoc(
-              """
+            if (serviceDecls.hasEnclosingScopeDeclarations) {
+                wroteAnything = true
+                val serviceObjectBuilder =
+                    TypeSpec
+                        .objectBuilder(service.serviceName.toClassSimpleName().withSuffix(topLevelSuffix))
+                        .addKdoc(
+                            """
             Holder for Kotlin coroutine-based client and server APIs for %L.
             """.trimIndent(),
-              service.fullName
-            )
-        serviceDecls.writeToEnclosingType(serviceObjectBuilder)
-        fileBuilder.addType(serviceObjectBuilder.build())
-      }
+                            service.fullName
+                        )
+                serviceDecls.writeToEnclosingType(serviceObjectBuilder)
+                fileBuilder.addType(serviceObjectBuilder.build())
+            }
 
-      if (serviceDecls.hasTopLevelDeclarations) {
-        wroteAnything = true
-        serviceDecls.writeOnlyTopLevel(fileBuilder)
-      }
+            if (serviceDecls.hasTopLevelDeclarations) {
+                wroteAnything = true
+                serviceDecls.writeOnlyTopLevel(fileBuilder)
+            }
+        }
+
+        return if (wroteAnything) fileBuilder.build() else null
     }
-
-    return if (wroteAnything) fileBuilder.build() else null
-  }
 }

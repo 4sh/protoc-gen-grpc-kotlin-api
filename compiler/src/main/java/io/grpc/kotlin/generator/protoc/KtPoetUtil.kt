@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
@@ -27,22 +27,22 @@ import java.nio.file.Paths
 import kotlin.reflect.KClass
 
 fun ParameterSpec.Companion.of(
-  name: String,
-  type: TypeName,
-  vararg modifiers: KModifier
+    name: String,
+    type: TypeName,
+    vararg modifiers: KModifier
 ): ParameterSpec = ParameterSpec.builder(name, type, *modifiers).build()
 
 /** Create a fully qualified [MemberName] in this class with the specified name. */
 fun KClass<*>.member(memberName: String): MemberName = MemberName(asClassName(), memberName)
 
 private fun path(vararg component: String): Path =
-  Paths.get(component[0], *component.sliceArray(1 until component.size))
+    Paths.get(component[0], *component.sliceArray(1 until component.size))
 
 val FileSpec.path: Path
-  get() {
-    return if (packageName.isEmpty()) {
-      Paths.get("$name.kt")
-    } else {
-      path(*packageName.split('.').toTypedArray(), "$name.kt")
+    get() {
+        return if (packageName.isEmpty()) {
+            Paths.get("$name.kt")
+        } else {
+            path(*packageName.split('.').toTypedArray(), "$name.kt")
+        }
     }
-  }

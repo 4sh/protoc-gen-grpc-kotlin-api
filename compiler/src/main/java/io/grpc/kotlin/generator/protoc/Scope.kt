@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
@@ -24,39 +24,39 @@ import com.squareup.kotlinpoet.FileSpec
  * convert a [ClassSimpleName] to a fully qualified [ClassName].
  */
 sealed class Scope {
-  abstract fun nestedClass(simpleName: ClassSimpleName): ClassName
+    abstract fun nestedClass(simpleName: ClassSimpleName): ClassName
 
-  fun nestedScope(simpleName: ClassSimpleName): Scope = ClassScope(nestedClass(simpleName))
+    fun nestedScope(simpleName: ClassSimpleName): Scope = ClassScope(nestedClass(simpleName))
 }
 
 /**
  * The unqualified, top-level scope.
  */
 object UnqualifiedScope : Scope() {
-  override fun nestedClass(simpleName: ClassSimpleName): ClassName =
-    ClassName("", simpleName.name)
+    override fun nestedClass(simpleName: ClassSimpleName): ClassName =
+        ClassName("", simpleName.name)
 }
 
 /**
  * The scope of a package.
  */
 data class PackageScope(val pkg: String) : Scope() {
-  override fun nestedClass(simpleName: ClassSimpleName): ClassName =
-    ClassName(pkg, simpleName.name)
+    override fun nestedClass(simpleName: ClassSimpleName): ClassName =
+        ClassName(pkg, simpleName.name)
 }
 
 /**
  * The scope of a fully qualified class.
  */
 class ClassScope(private val className: ClassName) : Scope() {
-  override fun nestedClass(simpleName: ClassSimpleName): ClassName =
-    className.nestedClass(simpleName)
+    override fun nestedClass(simpleName: ClassSimpleName): ClassName =
+        className.nestedClass(simpleName)
 }
 
 /**
  * Creates a [FileSpec.Builder] for a class with the specified simple name in the specified package.
  */
 fun FileSpec.Companion.builder(
-  packageName: PackageScope,
-  simpleName: ClassSimpleName
+    packageName: PackageScope,
+    simpleName: ClassSimpleName
 ): FileSpec.Builder = builder(packageName.pkg, simpleName.name)

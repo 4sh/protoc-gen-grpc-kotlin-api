@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.grpc.kotlin.generator.protoc
+package fr.quatresh.kotlin.grpc.api.generator.protoc
 
 import com.google.common.base.CaseFormat
 import com.squareup.kotlinpoet.ClassName
@@ -31,76 +31,76 @@ import kotlin.reflect.KClass
  * This helps us keep track of what names are in what format.
  */
 data class MemberSimpleName(val name: String) : CharSequence by name {
-  companion object {
-    val OPERATOR_GET = MemberSimpleName("get")
-    val OPERATOR_SET = MemberSimpleName("set")
-    val OPERATOR_CONTAINS = MemberSimpleName("contains")
-    val OPERATOR_PLUS_ASSIGN = MemberSimpleName("plusAssign")
-    val OPERATOR_MINUS_ASSIGN = MemberSimpleName("minusAssign")
-  }
+    companion object {
+        val OPERATOR_GET = MemberSimpleName("get")
+        val OPERATOR_SET = MemberSimpleName("set")
+        val OPERATOR_CONTAINS = MemberSimpleName("contains")
+        val OPERATOR_PLUS_ASSIGN = MemberSimpleName("plusAssign")
+        val OPERATOR_MINUS_ASSIGN = MemberSimpleName("minusAssign")
+    }
 
-  fun withSuffix(suffix: String): MemberSimpleName = MemberSimpleName(name + suffix)
-  fun withPrefix(prefix: String): MemberSimpleName =
-    MemberSimpleName(prefix + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, name))
+    fun withSuffix(suffix: String): MemberSimpleName = MemberSimpleName(name + suffix)
+    fun withPrefix(prefix: String): MemberSimpleName =
+        MemberSimpleName(prefix + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, name))
 
-  operator fun plus(other: MemberSimpleName): MemberSimpleName =
-    MemberSimpleName(name + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, other.name))
+    operator fun plus(other: MemberSimpleName): MemberSimpleName =
+        MemberSimpleName(name + CaseFormat.LOWER_CAMEL.to(CaseFormat.UPPER_CAMEL, other.name))
 
-  override fun toString() = name
+    override fun toString() = name
 }
 
 /** Create a builder for a parameter with the specified simple name and type. */
 fun ParameterSpec.Companion.builder(
-  simpleName: MemberSimpleName,
-  type: TypeName,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: TypeName,
+    vararg modifiers: KModifier
 ): ParameterSpec.Builder = builder(simpleName.name, type, *modifiers)
 
 /** Create a builder for a parameter with the specified simple name and type. */
 fun ParameterSpec.Companion.builder(
-  simpleName: MemberSimpleName,
-  type: KClass<*>,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: KClass<*>,
+    vararg modifiers: KModifier
 ): ParameterSpec.Builder = builder(simpleName.name, type, *modifiers)
 
 /** Create a parameter with the specified simple name and type. */
 fun ParameterSpec.Companion.of(
-  simpleName: MemberSimpleName,
-  type: TypeName,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: TypeName,
+    vararg modifiers: KModifier
 ): ParameterSpec = builder(simpleName, type, *modifiers).build()
 
 /** Create a parameter with the specified simple name and type. */
 fun ParameterSpec.Companion.of(
-  simpleName: MemberSimpleName,
-  type: KClass<*>,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: KClass<*>,
+    vararg modifiers: KModifier
 ): ParameterSpec = builder(simpleName, type, *modifiers).build()
 
 /** Create a property with the specified simple name and type. */
 fun PropertySpec.Companion.of(
-  simpleName: MemberSimpleName,
-  type: KClass<*>,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: KClass<*>,
+    vararg modifiers: KModifier
 ): PropertySpec = builder(simpleName.name, type, *modifiers).build()
 
 /** Create a property with the specified simple name and type. */
 fun PropertySpec.Companion.of(
-  simpleName: MemberSimpleName,
-  type: TypeName,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: TypeName,
+    vararg modifiers: KModifier
 ): PropertySpec = builder(simpleName, type, *modifiers).build()
 
 /** Create a builder for a property with the specified simple name and type. */
 fun PropertySpec.Companion.builder(
-  simpleName: MemberSimpleName,
-  type: TypeName,
-  vararg modifiers: KModifier
+    simpleName: MemberSimpleName,
+    type: TypeName,
+    vararg modifiers: KModifier
 ): PropertySpec.Builder = builder(simpleName.name, type, *modifiers)
 
 /** Create a builder for a function with the specified simple name. */
 fun FunSpec.Companion.builder(
-  simpleName: MemberSimpleName
+    simpleName: MemberSimpleName
 ): FunSpec.Builder = builder(simpleName.name)
 
 /** Create a fully qualified [MemberName] in this class with the specified name. */
