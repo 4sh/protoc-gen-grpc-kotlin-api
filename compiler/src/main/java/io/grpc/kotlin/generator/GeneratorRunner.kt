@@ -18,9 +18,10 @@ package io.grpc.kotlin.generator
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.FileSpec
-import fr.quatresh.kotlin.grpc.api.generator.protoc.AbstractGeneratorRunner
-import fr.quatresh.kotlin.grpc.api.generator.protoc.GeneratorConfig
-import fr.quatresh.kotlin.grpc.api.generator.protoc.JavaPackagePolicy
+import fr.quatresh.grpc.kotlin.generator.api.ApiInterfaceCodeGenerator
+import io.grpc.kotlin.generator.protoc.AbstractGeneratorRunner
+import io.grpc.kotlin.generator.protoc.GeneratorConfig
+import io.grpc.kotlin.generator.protoc.JavaPackagePolicy
 
 /** Main runner for code generation for Kotlin gRPC APIs. */
 object GeneratorRunner : AbstractGeneratorRunner() {
@@ -31,12 +32,10 @@ object GeneratorRunner : AbstractGeneratorRunner() {
 
     val generator = ProtoFileCodeGenerator(
         generators = listOf(
-            ::ServiceNameGenerator,
-            ::ApiInterfaceCodeGenerator,
-            ::TopLevelConstantsGenerator
+            ::ApiInterfaceCodeGenerator
         ),
         config = config,
-        topLevelSuffix = "GrpcKt"
+        topLevelSuffix = "Api"
     )
 
     override fun generateCodeForFile(file: FileDescriptor): List<FileSpec> =

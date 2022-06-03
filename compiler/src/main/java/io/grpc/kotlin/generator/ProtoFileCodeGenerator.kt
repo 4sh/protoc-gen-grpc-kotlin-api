@@ -18,13 +18,10 @@ package io.grpc.kotlin.generator
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.FileSpec
-import com.squareup.kotlinpoet.TypeSpec
-import fr.quatresh.kotlin.grpc.api.generator.protoc.GeneratorConfig
-import fr.quatresh.kotlin.grpc.api.generator.protoc.builder
-import fr.quatresh.kotlin.grpc.api.generator.protoc.declarations
-import fr.quatresh.kotlin.grpc.api.generator.protoc.objectBuilder
-import fr.quatresh.kotlin.grpc.api.generator.protoc.outerClassSimpleName
-import fr.quatresh.kotlin.grpc.api.generator.protoc.serviceName
+import io.grpc.kotlin.generator.protoc.GeneratorConfig
+import io.grpc.kotlin.generator.protoc.builder
+import io.grpc.kotlin.generator.protoc.declarations
+import io.grpc.kotlin.generator.protoc.outerClassSimpleName
 
 /**
  * Given a list of [ServiceCodeGenerator] factories, generates (optionally) a [FileSpec] of the
@@ -38,10 +35,9 @@ class ProtoFileCodeGenerator(
 
     private val generators = generators.map { it(config) }
 
-    fun generateCodeForFile(fileDescriptor: FileDescriptor): FileSpec? = with(config) {
+    fun generateCodeForFile(fileDescriptor: FileDescriptor): FileSpec = with(config) {
         val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
 
-        var wroteAnything = false
         val fileBuilder = FileSpec.builder(javaPackage(fileDescriptor), outerTypeName)
 
         for (service in fileDescriptor.services) {
@@ -51,27 +47,9 @@ class ProtoFileCodeGenerator(
                 }
             }
 
-            if (serviceDecls.hasEnclosingScopeDeclarations) {
-                wroteAnything = true
-                val serviceObjectBuilder =
-                    TypeSpec
-                        .objectBuilder(service.serviceName.toClassSimpleName().withSuffix(topLevelSuffix))
-                        .addKdoc(
-                            """
-            Holder for Kotlin coroutine-based client and server APIs for %L.
-            """.trimIndent(),
-                            service.fullName
-                        )
-                serviceDecls.writeToEnclosingType(serviceObjectBuilder)
-                fileBuilder.addType(serviceObjectBuilder.build())
-            }
-
-            if (serviceDecls.hasTopLevelDeclarations) {
-                wroteAnything = true
-                serviceDecls.writeOnlyTopLevel(fileBuilder)
-            }
+            serviceDecls.writeAllAtTopLevel(fileBuilder)
         }
 
-        return if (wroteAnything) fileBuilder.build() else null
+        return fileBuilder.build()
     }
 }

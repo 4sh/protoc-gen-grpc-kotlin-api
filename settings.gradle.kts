@@ -1,3 +1,5 @@
-rootProject.name = "grpc-kotlin"
+rootProject.name = "protoc-gen-grpc-kotlin-api"
 
-include("stub", "compiler", "interop_testing")
+include(
+    "compiler"
+)

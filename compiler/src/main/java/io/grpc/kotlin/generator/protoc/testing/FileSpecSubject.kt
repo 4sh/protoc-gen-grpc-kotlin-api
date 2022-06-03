@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc.testing
+package io.grpc.kotlin.generator.protoc.testing
 
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject

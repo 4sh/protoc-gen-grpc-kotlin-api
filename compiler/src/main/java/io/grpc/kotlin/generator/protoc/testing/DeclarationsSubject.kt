@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc.testing
+package io.grpc.kotlin.generator.protoc.testing
 
 import com.google.common.truth.FailureMetadata
 import com.google.common.truth.Subject
 import com.google.common.truth.Truth.assertAbout
 import com.squareup.kotlinpoet.FileSpec
-import fr.quatresh.kotlin.grpc.api.generator.protoc.Declarations
+import io.grpc.kotlin.generator.protoc.Declarations
 
 val declarationsSubjectFactory: Subject.Factory<DeclarationsSubject, Declarations> =
     Subject.Factory(::DeclarationsSubject)

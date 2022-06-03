@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc
+package io.grpc.kotlin.generator.protoc
 
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier

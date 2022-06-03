@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc.util.sort
+package io.grpc.kotlin.generator.protoc.util.sort
 
 import java.util.PriorityQueue
 

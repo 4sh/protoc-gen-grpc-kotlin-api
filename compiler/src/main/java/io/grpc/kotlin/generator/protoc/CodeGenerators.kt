@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc
+package io.grpc.kotlin.generator.protoc
 
 import com.google.common.base.Throwables
 import com.google.common.graph.GraphBuilder
@@ -22,7 +22,7 @@ import com.google.protobuf.DescriptorProtos.FileDescriptorProto
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.google.protobuf.compiler.PluginProtos
 import com.squareup.kotlinpoet.FileSpec
-import fr.quatresh.kotlin.grpc.api.generator.protoc.util.graph.TopologicalSortGraph
+import io.grpc.kotlin.generator.protoc.util.graph.TopologicalSortGraph
 
 internal object CodeGenerators {
     fun descriptorMap(

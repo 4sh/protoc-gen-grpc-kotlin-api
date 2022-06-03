@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package fr.quatresh.kotlin.grpc.api.generator.protoc
+package io.grpc.kotlin.generator.protoc
 
 import com.google.common.base.Ascii
 import com.google.common.base.CaseFormat.LOWER_UNDERSCORE
@@ -34,8 +34,8 @@ import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.TypeName
-import fr.quatresh.kotlin.grpc.api.generator.protoc.TypeNames.BYTE_STRING
-import fr.quatresh.kotlin.grpc.api.generator.protoc.TypeNames.STRING
+import io.grpc.kotlin.generator.protoc.TypeNames.BYTE_STRING
+import io.grpc.kotlin.generator.protoc.TypeNames.STRING
 
 private val JavaType.scalarType: TypeName
     get() = when (this) {

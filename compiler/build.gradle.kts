@@ -13,22 +13,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${rootProject.ext["coroutinesVersion"]}")
 
     // Grpc and Protobuf
-    implementation(project(":stub"))
     implementation("io.grpc:grpc-protobuf:${rootProject.ext["grpcVersion"]}")
 
     // Misc
     implementation(kotlin("reflect"))
     implementation("com.squareup:kotlinpoet:1.11.0")
     implementation("com.google.truth:truth:1.1.3")
-
-    // Testing
-    testImplementation("junit:junit:4.13.2")
-    testImplementation("com.google.guava:guava:29.0-jre")
-    testImplementation("com.google.jimfs:jimfs:1.2")
-    testImplementation("com.google.protobuf:protobuf-gradle-plugin:0.8.18")
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testImplementation("org.mockito:mockito-core:4.5.1")
 }
 
 tasks.jar {
@@ -52,8 +42,8 @@ publishing {
         named<MavenPublication>("maven") {
             pom {
                 name.set("gRPC Kotlin Compiler")
-                artifactId = "protoc-gen-grpc-kotlin"
-                description.set("gRPC Kotlin protoc compiler plugin")
+                artifactId = "protoc-gen-grpc-kotlin-api"
+                description.set("gRPC Kotlin API protoc compiler plugin")
             }
 
             artifact(tasks.jar) {
@@ -77,10 +67,6 @@ protobuf {
     }
     generateProtoTasks {
         all().forEach {
-            if (it.name.startsWith("generateTestProto")) {
-                it.dependsOn("jar")
-            }
-
             it.plugins {
                 id("grpc")
                 id("grpckt")
