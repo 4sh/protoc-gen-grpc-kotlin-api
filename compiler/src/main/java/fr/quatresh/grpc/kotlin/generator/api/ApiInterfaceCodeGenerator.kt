@@ -15,6 +15,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
         TypeSpec.interfaceBuilder(buildApiInterfaceName(service))
             .apply { addFunctions(buildFunctions(service)) }
             .apply { addTypes(buildMessageTypes(service)) }
+            .apply { addTypes(buildEnumTypes(service)) }
             .build()
 
     private fun buildFunctions(service: Descriptors.ServiceDescriptor): List<FunSpec> =
@@ -31,15 +32,6 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
                     )
                     .build()
             }
-
-    private fun buildFunctionParameter(method: Descriptors.MethodDescriptor): ParameterSpec =
-        ParameterSpec(
-            "input",
-            ClassName(
-                "",
-                method.inputType.simpleName.name.asApiClassName()
-            )
-        )
 
     private fun buildMessageTypes(service: Descriptors.ServiceDescriptor): List<TypeSpec> =
         service.file
@@ -58,33 +50,69 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
                     .build()
             }
 
-    private fun buildMessageTypeConstructorParameters(descriptor: Descriptors.Descriptor) =
+    private fun buildEnumTypes(service: Descriptors.ServiceDescriptor): List<TypeSpec> =
+        service.file
+            .enumTypes
+            .map { descriptor ->
+                TypeSpec.enumBuilder(descriptor.simpleName.name.asApiClassName())
+                    .apply {
+                        descriptor.values
+                            .forEach { enumValue -> addEnumConstant(enumValue.name) }
+                    }
+                    .build()
+            }
+
+    private fun buildFunctionParameter(method: Descriptors.MethodDescriptor): ParameterSpec = with(config) {
+        ParameterSpec(
+            "input",
+            method.inputType.messageClass()
+        )
+    }
+
+    private fun buildMessageTypeConstructorParameters(descriptor: Descriptors.Descriptor) = with(config) {
         descriptor
             .fields
             .map { field ->
                 ParameterSpec
                     .builder(
                         field.fieldName.javaSimpleName.name.asApiClassName(),
-                        ClassName("kotlin", "String")
+                        field.asClassName()
                     )
                     .build()
             }
+    }
 
-    private fun buildMessageTypeProperties(descriptor: Descriptors.Descriptor): List<PropertySpec> =
+    private fun buildMessageTypeProperties(descriptor: Descriptors.Descriptor): List<PropertySpec> = with(config) {
         descriptor
             .fields
             .map { field ->
                 PropertySpec
                     .builder(
                         field.fieldName.javaSimpleName.name.asApiClassName(),
-                        ClassName("kotlin", "String")
+                        field.asClassName()
                     )
                     .initializer(field.fieldName.javaSimpleName.name)
                     .build()
             }
+    }
+
+    private fun String.asApiClassName() = replace("Dto", "")
+
+    private fun Descriptors.FieldDescriptor.asClassName(): ClassName = with(config) {
+        when (javaType) {
+            Descriptors.FieldDescriptor.JavaType.MESSAGE -> messageType.messageClass()
+            Descriptors.FieldDescriptor.JavaType.ENUM -> enumType.enumClass()
+            Descriptors.FieldDescriptor.JavaType.INT -> ClassName("kotlin", "Int")
+            Descriptors.FieldDescriptor.JavaType.FLOAT -> ClassName("kotlin", "Float")
+            Descriptors.FieldDescriptor.JavaType.DOUBLE -> ClassName("kotlin", "Double")
+            Descriptors.FieldDescriptor.JavaType.LONG -> ClassName("kotlin", "Long")
+            Descriptors.FieldDescriptor.JavaType.STRING -> ClassName("kotlin", "String")
+            Descriptors.FieldDescriptor.JavaType.BOOLEAN -> ClassName("kotlin", "Boolean")
+            Descriptors.FieldDescriptor.JavaType.BYTE_STRING -> ClassName("kotlin", "ByteString")
+            else -> throw IllegalStateException("unable to parse field '${name}' type")
+        }
+    }
 
     private fun buildApiInterfaceName(service: Descriptors.ServiceDescriptor): String =
         service.name.replace("Service", "")
-
-    private fun String.asApiClassName() = replace("Dto", "")
 }
