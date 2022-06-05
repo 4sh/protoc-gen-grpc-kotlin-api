@@ -12,26 +12,22 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
     }
 
     private fun buildApiInterfaceType(service: Descriptors.ServiceDescriptor): TypeSpec =
-        TypeSpec.interfaceBuilder(buildApiInterfaceName(service))
+        TypeSpec.interfaceBuilder(service.name)
             .apply { addFunctions(buildFunctions(service)) }
             .apply { addTypes(buildMessageTypes(service)) }
             .apply { addTypes(buildEnumTypes(service)) }
             .build()
 
-    private fun buildFunctions(service: Descriptors.ServiceDescriptor): List<FunSpec> =
+    private fun buildFunctions(service: Descriptors.ServiceDescriptor): List<FunSpec> = with(config) {
         service.methods
             .map { method ->
                 FunSpec.builder(method.methodName.toMemberSimpleName())
                     .addModifiers(KModifier.ABSTRACT)
                     .addParameter(buildFunctionParameter(method))
-                    .returns(
-                        ClassName(
-                            "",
-                            method.outputType.simpleName.name.asApiClassName()
-                        )
-                    )
+                    .returns(method.outputType.messageClass())
                     .build()
             }
+    }
 
     private fun buildMessageTypes(service: Descriptors.ServiceDescriptor): List<TypeSpec> =
         service.file
@@ -39,7 +35,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
             .map { descriptor ->
                 val constructorParameters = buildMessageTypeConstructorParameters(descriptor)
                 val properties = buildMessageTypeProperties(descriptor)
-                TypeSpec.classBuilder(descriptor.simpleName.name.asApiClassName())
+                TypeSpec.classBuilder(descriptor.simpleName.name)
                     .addModifiers(KModifier.DATA)
                     .primaryConstructor(
                         FunSpec.constructorBuilder()
@@ -54,7 +50,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
         service.file
             .enumTypes
             .map { descriptor ->
-                TypeSpec.enumBuilder(descriptor.simpleName.name.asApiClassName())
+                TypeSpec.enumBuilder(descriptor.simpleName.name)
                     .apply {
                         descriptor.values
                             .forEach { enumValue -> addEnumConstant(enumValue.name) }
@@ -75,7 +71,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
             .map { field ->
                 ParameterSpec
                     .builder(
-                        field.fieldName.javaSimpleName.name.asApiClassName(),
+                        field.fieldName.javaSimpleName.name,
                         field.asClassName()
                     )
                     .build()
@@ -88,15 +84,13 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
             .map { field ->
                 PropertySpec
                     .builder(
-                        field.fieldName.javaSimpleName.name.asApiClassName(),
+                        field.fieldName.javaSimpleName.name,
                         field.asClassName()
                     )
                     .initializer(field.fieldName.javaSimpleName.name)
                     .build()
             }
     }
-
-    private fun String.asApiClassName() = replace("Dto", "")
 
     private fun Descriptors.FieldDescriptor.asClassName(): ClassName = with(config) {
         when (javaType) {
@@ -112,7 +106,4 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : ServiceCodeGenerator(
             else -> throw IllegalStateException("unable to parse field '${name}' type")
         }
     }
-
-    private fun buildApiInterfaceName(service: Descriptors.ServiceDescriptor): String =
-        service.name.replace("Service", "")
 }
