@@ -6,11 +6,11 @@ import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.grpc.kotlin.generator.CodeGenerator
+import io.grpc.kotlin.generator.inputPackageParameterName
+import io.grpc.kotlin.generator.outputPackageParameterName
 import io.grpc.kotlin.generator.protoc.*
 
 class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config) {
-
-    private val inputPackageParameterName = "inputPackage"
 
     override fun generate(fileDescriptor: FileDescriptor, parameters: Map<String, String>): Declarations =
         declarations {
@@ -18,35 +18,35 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                 || parameters[inputPackageParameterName] == null
                 || fileDescriptor.`package`.startsWith(parameters[inputPackageParameterName]!!)
             ) {
-                extractTypes(fileDescriptor)
+                extractTypes(fileDescriptor, parameters)
                     .forEach { addType(it) }
             }
         }
 
-    private fun extractTypes(fileDescriptor: FileDescriptor): List<TypeSpec> {
+    private fun extractTypes(fileDescriptor: FileDescriptor, parameters: Map<String, String>): List<TypeSpec> {
         val messageDataClasses = fileDescriptor.messageTypes
-            .map { buildMessageType(it) }
+            .map { buildMessageType(it, parameters) }
         val enumClasses = fileDescriptor.enumTypes
             .map { buildEnumType(it) }
         val serviceInterfaces = fileDescriptor.services
-            .map { buildServiceType(it) }
+            .map { buildServiceType(it, parameters) }
         return messageDataClasses + enumClasses + serviceInterfaces
     }
 
-    private fun buildServiceType(service: Descriptors.ServiceDescriptor) =
+    private fun buildServiceType(service: Descriptors.ServiceDescriptor, parameters: Map<String, String>) =
         TypeSpec.interfaceBuilder(service.name)
-            .apply { addFunctions(buildFunctions(service)) }
+            .apply { addFunctions(buildFunctions(service, parameters)) }
             .build()
 
-    private fun buildFunctions(service: Descriptors.ServiceDescriptor): List<FunSpec> = with(config) {
+    private fun buildFunctions(service: Descriptors.ServiceDescriptor, parameters: Map<String, String>): List<FunSpec> =
         service.methods
             .map { method ->
                 FunSpec.builder(method.methodName.toMemberSimpleName())
                     .addModifiers(KModifier.ABSTRACT)
-                    .addParameter(buildFunctionParameter(method))
+                    .addParameter(buildFunctionParameter(method, parameters))
                     .apply {
                         val className = ClassName(
-                            method.outputType.file.`package`,
+                            method.outputType.file.`package`.toPackageName(parameters),
                             method.outputType.messageClassSimpleName.name
                         )
                         if (!className.isProtobufEmptyType()) {
@@ -55,11 +55,10 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     }
                     .build()
             }
-    }
 
-    private fun buildMessageType(descriptor: Descriptors.Descriptor): TypeSpec {
-        val constructorParameters = buildMessageTypeConstructorParameters(descriptor)
-        val properties = buildMessageTypeProperties(descriptor)
+    private fun buildMessageType(descriptor: Descriptors.Descriptor, parameters: Map<String, String>): TypeSpec {
+        val constructorParameters = buildMessageTypeConstructorParameters(descriptor, parameters)
+        val properties = buildMessageTypeProperties(descriptor, parameters)
         return TypeSpec.classBuilder(descriptor.simpleName.name)
             .apply {
                 if (constructorParameters.isNotEmpty()) {
@@ -83,60 +82,60 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
             }
             .build()
 
-    private fun buildFunctionParameter(method: Descriptors.MethodDescriptor): ParameterSpec = with(config) {
+    private fun buildFunctionParameter(method: Descriptors.MethodDescriptor, parameters: Map<String, String>): ParameterSpec =
         ParameterSpec(
             "input",
             ClassName(
-                method.inputType.file.`package`,
+                method.inputType.file.`package`.toPackageName(parameters),
                 method.inputType.messageClassSimpleName.name
             )
         )
-    }
 
-    private fun buildMessageTypeConstructorParameters(descriptor: Descriptors.Descriptor) = with(config) {
+    private fun buildMessageTypeConstructorParameters(
+        descriptor: Descriptors.Descriptor,
+        parameters: Map<String, String>
+    ) =
         descriptor
             .fields
             .map { field ->
                 ParameterSpec
                     .builder(
                         field.fieldName.javaSimpleName.name,
-                        field.asClassName()
+                        field.asClassName(parameters)
                     )
                     .build()
             }
-    }
 
-    private fun buildMessageTypeProperties(descriptor: Descriptors.Descriptor): List<PropertySpec> = with(config) {
+    private fun buildMessageTypeProperties(descriptor: Descriptors.Descriptor, parameters: Map<String, String>): List<PropertySpec> =
         descriptor
             .fields
             .map { field ->
                 PropertySpec
                     .builder(
                         field.fieldName.javaSimpleName.name,
-                        field.asClassName()
+                        field.asClassName(parameters)
                     )
                     .initializer(field.fieldName.javaSimpleName.name)
                     .build()
             }
-    }
 
-    private fun Descriptors.FieldDescriptor.asClassName(): TypeName =
+    private fun Descriptors.FieldDescriptor.asClassName(parameters: Map<String, String>): TypeName =
         when (javaType) {
             Descriptors.FieldDescriptor.JavaType.MESSAGE -> if (isMapField) {
                 ClassName("kotlin.collections", "Map")
                     .parameterizedBy(
-                        messageType.findFieldByName("key").asClassName(),
-                        messageType.findFieldByName("value").asClassName()
+                        messageType.findFieldByName("key").asClassName(parameters),
+                        messageType.findFieldByName("value").asClassName(parameters)
                     )
             } else {
                 ClassName(
-                    messageType.file.`package`,
+                    messageType.file.`package`.toPackageName(parameters),
                     messageType.messageClassSimpleName.name
                 )
             }
             Descriptors.FieldDescriptor.JavaType.ENUM ->
                 ClassName(
-                    enumType.file.`package`,
+                    enumType.file.`package`.toPackageName(parameters),
                     enumType.enumClassSimpleName.name
                 )
             Descriptors.FieldDescriptor.JavaType.INT ->
@@ -159,4 +158,11 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
     private fun ClassName.isProtobufEmptyType() =
         packageName == "google.protobuf"
                 && simpleName == "Empty"
+
+    private fun String.toPackageName(parameters: Map<String, String>): String =
+        if (parameters.containsKey(outputPackageParameterName) && startsWith(parameters[outputPackageParameterName]!!)) {
+            parameters[outputPackageParameterName]!!
+        } else {
+            this
+        }
 }

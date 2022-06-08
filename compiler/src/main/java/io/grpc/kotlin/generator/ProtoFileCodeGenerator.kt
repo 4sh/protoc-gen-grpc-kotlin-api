@@ -29,7 +29,6 @@ class ProtoFileCodeGenerator(
     private val config: GeneratorConfig,
     private val topLevelSuffix: String
 ) {
-    private val outputPackageParameterName = "outputPackage"
     private val generators = generators.map { it(config) }
 
     fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec? = with(config) {
