@@ -58,7 +58,11 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         val constructorParameters = buildMessageTypeConstructorParameters(descriptor)
         val properties = buildMessageTypeProperties(descriptor)
         return TypeSpec.classBuilder(descriptor.simpleName.name)
-            .addModifiers(KModifier.DATA)
+            .apply {
+                if (constructorParameters.isNotEmpty()) {
+                    addModifiers(KModifier.DATA)
+                }
+            }
             .primaryConstructor(
                 FunSpec.constructorBuilder()
                     .addParameters(constructorParameters)
