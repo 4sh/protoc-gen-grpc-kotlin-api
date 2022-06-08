@@ -10,13 +10,13 @@ import io.grpc.kotlin.generator.protoc.*
 
 class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config) {
 
-    private val packageParameterName = "package"
+    private val inputPackageParameterName = "inputPackage"
 
     override fun generate(fileDescriptor: FileDescriptor, parameters: Map<String, String>): Declarations =
         declarations {
-            if (!parameters.containsKey(packageParameterName)
-                || parameters[packageParameterName] == null
-                || fileDescriptor.`package`.startsWith(parameters[packageParameterName]!!)
+            if (!parameters.containsKey(inputPackageParameterName)
+                || parameters[inputPackageParameterName] == null
+                || fileDescriptor.`package`.startsWith(parameters[inputPackageParameterName]!!)
             ) {
                 extractTypes(fileDescriptor)
                     .forEach { addType(it) }
