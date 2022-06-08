@@ -44,12 +44,15 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                 FunSpec.builder(method.methodName.toMemberSimpleName())
                     .addModifiers(KModifier.ABSTRACT)
                     .addParameter(buildFunctionParameter(method))
-                    .returns(
-                        ClassName(
+                    .apply {
+                        val className = ClassName(
                             method.outputType.file.`package`,
                             method.outputType.messageClassSimpleName.name
                         )
-                    )
+                        if (!className.isProtobufEmptyType()) {
+                            returns(className)
+                        }
+                    }
                     .build()
             }
     }
@@ -152,4 +155,8 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                 ClassName("kotlin", "ByteString")
             else -> throw IllegalStateException("unable to parse field '${name}' type")
         }
+
+    private fun ClassName.isProtobufEmptyType() =
+        packageName == "google.protobuf"
+                && simpleName == "Empty"
 }
