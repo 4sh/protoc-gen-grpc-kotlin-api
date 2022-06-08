@@ -24,14 +24,13 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         }
 
     private fun extractTypes(fileDescriptor: FileDescriptor): List<TypeSpec> {
-        val serviceInterfaces = fileDescriptor.services
-            .map { buildServiceType(it) }
         val messageDataClasses = fileDescriptor.messageTypes
             .map { buildMessageType(it) }
         val enumClasses = fileDescriptor.enumTypes
             .map { buildEnumType(it) }
-
-        return serviceInterfaces + messageDataClasses + enumClasses
+        val serviceInterfaces = fileDescriptor.services
+            .map { buildServiceType(it) }
+        return messageDataClasses + enumClasses + serviceInterfaces
     }
 
     private fun buildServiceType(service: Descriptors.ServiceDescriptor) =
@@ -47,7 +46,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .addParameter(buildFunctionParameter(method))
                     .returns(
                         ClassName(
-                            "",
+                            method.outputType.file.`package`,
                             method.outputType.messageClassSimpleName.name
                         )
                     )
@@ -81,7 +80,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         ParameterSpec(
             "input",
             ClassName(
-                "",
+                method.inputType.file.`package`,
                 method.inputType.messageClassSimpleName.name
             )
         )
@@ -116,17 +115,23 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
 
     private fun Descriptors.FieldDescriptor.asClassName(): TypeName =
         when (javaType) {
-            Descriptors.FieldDescriptor.JavaType.MESSAGE -> if (this.isMapField) {
+            Descriptors.FieldDescriptor.JavaType.MESSAGE -> if (isMapField) {
                 ClassName("kotlin.collections", "Map")
                     .parameterizedBy(
-                        ClassName("kotlin", "String"),
-                        ClassName("kotlin", "String")
+                        messageType.findFieldByName("key").asClassName(),
+                        messageType.findFieldByName("value").asClassName()
                     )
             } else {
-                ClassName("", messageType.messageClassSimpleName.name)
+                ClassName(
+                    messageType.file.`package`,
+                    messageType.messageClassSimpleName.name
+                )
             }
             Descriptors.FieldDescriptor.JavaType.ENUM ->
-                ClassName("", enumType.enumClassSimpleName.name)
+                ClassName(
+                    enumType.file.`package`,
+                    enumType.enumClassSimpleName.name
+                )
             Descriptors.FieldDescriptor.JavaType.INT ->
                 ClassName("kotlin", "Int")
             Descriptors.FieldDescriptor.JavaType.FLOAT ->

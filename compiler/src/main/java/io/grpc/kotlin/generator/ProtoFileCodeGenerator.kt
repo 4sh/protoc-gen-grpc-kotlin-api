@@ -35,19 +35,22 @@ class ProtoFileCodeGenerator(
 
     private val generators = generators.map { it(config) }
 
-    fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec = with(config) {
+    fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec? = with(config) {
         val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
 
         val fileBuilder = FileSpec.builder(javaPackage(fileDescriptor), outerTypeName)
 
-        val serviceDecls = declarations {
+        val decls = declarations {
             for (generator in generators) {
                 merge(generator.generate(fileDescriptor, parameters))
             }
         }
 
-        serviceDecls.writeAllAtTopLevel(fileBuilder)
-
-        return fileBuilder.build()
+        return if (decls.hasEnclosingScopeDeclarations || decls.hasTopLevelDeclarations) {
+            decls.writeAllAtTopLevel(fileBuilder)
+            fileBuilder.build()
+        } else {
+            null
+        }
     }
 }

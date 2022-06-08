@@ -50,6 +50,7 @@ abstract class AbstractGeneratorRunner {
                         val descriptorMap =
                             CodeGenerators.descriptorMap(generatorRequest.protoFileList)
                         val parameters = generatorRequest.parameter.split(",")
+                            .filter { param -> param.contains("=") }
                             .map { param -> param.split("=") }
                             .associate { (key, value) -> key to value }
                         generatorRequest.filesToGenerate

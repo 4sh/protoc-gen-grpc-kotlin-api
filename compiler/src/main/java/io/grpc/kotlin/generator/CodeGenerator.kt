@@ -28,7 +28,10 @@ abstract class CodeGenerator(protected val config: GeneratorConfig) {
     operator fun plus(other: CodeGenerator): CodeGenerator {
         val me = this
         return object : CodeGenerator(config) {
-            override fun generate(fileDescriptor: Descriptors.FileDescriptor, parameters: Map<String, String>): Declarations = declarations {
+            override fun generate(
+                fileDescriptor: Descriptors.FileDescriptor,
+                parameters: Map<String, String>
+            ): Declarations = declarations {
                 merge(me.generate(fileDescriptor, parameters))
                 merge(other.generate(fileDescriptor, parameters))
             }
