@@ -24,31 +24,29 @@ import io.grpc.kotlin.generator.protoc.declarations
 import io.grpc.kotlin.generator.protoc.outerClassSimpleName
 
 /**
- * Given a list of [ServiceCodeGenerator] factories, generates (optionally) a [FileSpec] of the
+ * Given a list of [CodeGenerator] factories, generates (optionally) a [FileSpec] of the
  * generated code.
  */
 class ProtoFileCodeGenerator(
-    generators: List<(GeneratorConfig) -> ServiceCodeGenerator>,
+    generators: List<(GeneratorConfig) -> CodeGenerator>,
     private val config: GeneratorConfig,
     private val topLevelSuffix: String
 ) {
 
     private val generators = generators.map { it(config) }
 
-    fun generateCodeForFile(fileDescriptor: FileDescriptor): FileSpec = with(config) {
+    fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec = with(config) {
         val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
 
         val fileBuilder = FileSpec.builder(javaPackage(fileDescriptor), outerTypeName)
 
-        for (service in fileDescriptor.services) {
-            val serviceDecls = declarations {
-                for (generator in generators) {
-                    merge(generator.generate(service))
-                }
+        val serviceDecls = declarations {
+            for (generator in generators) {
+                merge(generator.generate(fileDescriptor, parameters))
             }
-
-            serviceDecls.writeAllAtTopLevel(fileBuilder)
         }
+
+        serviceDecls.writeAllAtTopLevel(fileBuilder)
 
         return fileBuilder.build()
     }

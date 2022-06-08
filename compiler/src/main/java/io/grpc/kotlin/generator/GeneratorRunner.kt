@@ -38,6 +38,6 @@ object GeneratorRunner : AbstractGeneratorRunner() {
         topLevelSuffix = "Api"
     )
 
-    override fun generateCodeForFile(file: FileDescriptor): List<FileSpec> =
-        listOfNotNull(generator.generateCodeForFile(file))
+    override fun generateCodeForFile(file: FileDescriptor, parameters: Map<String, String>): List<FileSpec> =
+        listOfNotNull(generator.generateCodeForFile(file, parameters))
 }

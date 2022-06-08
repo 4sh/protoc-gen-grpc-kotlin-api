@@ -58,9 +58,6 @@ protobuf {
         artifact = "com.google.protobuf:protoc:${rootProject.ext["protobufVersion"]}"
     }
     plugins {
-        id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:${rootProject.ext["grpcVersion"]}"
-        }
         id("grpckt") {
             path = tasks.jar.get().archiveFile.get().asFile.absolutePath
         }
@@ -68,7 +65,6 @@ protobuf {
     generateProtoTasks {
         all().forEach {
             it.plugins {
-                id("grpc")
                 id("grpckt")
             }
         }

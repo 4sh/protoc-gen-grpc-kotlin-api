@@ -6,7 +6,7 @@ plugins {
 }
 
 group = "fr.quatresh"
-version = "1.0"
+version = "1.0.1"
 
 ext["grpcVersion"] = "1.46.0"
 ext["protobufVersion"] = "3.20.1"
