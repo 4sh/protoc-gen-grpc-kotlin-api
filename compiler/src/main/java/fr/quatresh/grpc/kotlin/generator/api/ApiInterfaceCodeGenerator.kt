@@ -73,6 +73,16 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     addModifiers(KModifier.DATA)
                 }
             }
+            .apply {
+                if (constructorParameters.any { it.name == "id" }) {
+                    addSuperinterface(
+                        ClassName(
+                            "com.izivia.emobility.base.api",
+                            "BaseApiElement"
+                        )
+                    )
+                }
+            }
             .primaryConstructor(
                 FunSpec.constructorBuilder()
                     .addParameters(constructorParameters)
@@ -125,11 +135,14 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         descriptor
             .fields
             .map { field ->
-                ParameterSpec(
-                    field.fieldName.javaSimpleName.name,
-                    field.asClassName(parameters)
-                        .copy(nullable = field.isOptional)
-                )
+                val fieldName = field.fieldName.javaSimpleName.name
+                ParameterSpec
+                    .builder(
+                        fieldName,
+                        field.asClassName(parameters)
+                            .copy(nullable = field.isOptional)
+                    )
+                    .build()
             }
 
     private fun buildMessageTypeProperties(
@@ -139,13 +152,19 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         descriptor
             .fields
             .map { field ->
+                val fieldName = field.fieldName.javaSimpleName.name
                 PropertySpec
                     .builder(
-                        field.fieldName.javaSimpleName.name,
+                        fieldName,
                         field.asClassName(parameters)
                             .copy(nullable = field.isOptional)
                     )
-                    .initializer(field.fieldName.javaSimpleName.name)
+                    .run {
+                        if (fieldName == "id") {
+                            addModifiers(KModifier.OVERRIDE)
+                        } else this
+                    }
+                    .initializer(fieldName)
                     .build()
             }
 
