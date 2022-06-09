@@ -3,11 +3,8 @@ package fr.quatresh.grpc.kotlin.generator.api
 import com.google.protobuf.Descriptors.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import io.grpc.kotlin.generator.CodeGenerator
-import io.grpc.kotlin.generator.inputPackageParameterName
+import io.grpc.kotlin.generator.*
 import io.grpc.kotlin.generator.protoc.*
-import io.grpc.kotlin.generator.toClassName
-import io.grpc.kotlin.generator.toPackageName
 
 class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config) {
 
@@ -75,12 +72,8 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
             }
             .apply {
                 if (constructorParameters.any { it.name == "id" }) {
-                    addSuperinterface(
-                        ClassName(
-                            "com.izivia.emobility.base.api",
-                            "BaseApiElement"
-                        )
-                    )
+                    buildBaseClassName(parameters)
+                        ?.also { addSuperinterface(it) }
                 }
             }
             .primaryConstructor(
