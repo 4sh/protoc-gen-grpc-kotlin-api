@@ -1,16 +1,20 @@
 package fr.quatresh.grpc.kotlin.generator.api
 
-import com.google.protobuf.Descriptors
-import com.google.protobuf.Descriptors.EnumDescriptor
-import com.google.protobuf.Descriptors.FileDescriptor
+import com.google.protobuf.Descriptors.*
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.grpc.kotlin.generator.CodeGenerator
 import io.grpc.kotlin.generator.inputPackageParameterName
 import io.grpc.kotlin.generator.protoc.*
+import io.grpc.kotlin.generator.toClassName
 import io.grpc.kotlin.generator.toPackageName
 
 class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config) {
+
+    private val flowClassName = ClassName(
+        "kotlinx.coroutines.flow",
+        "Flow"
+    )
 
     override fun generate(fileDescriptor: FileDescriptor, parameters: Map<String, String>): Declarations =
         declarations {
@@ -27,39 +31,43 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         val messageDataClasses = fileDescriptor.messageTypes
             .map { buildMessageType(it, parameters) }
         val enumClasses = fileDescriptor.enumTypes
-            .map { buildEnumType(it) }
+            .map { buildEnumType(it, parameters) }
         val serviceInterfaces = fileDescriptor.services
             .map { buildServiceType(it, parameters) }
         return messageDataClasses + enumClasses + serviceInterfaces
     }
 
-    private fun buildServiceType(service: Descriptors.ServiceDescriptor, parameters: Map<String, String>) =
-        TypeSpec.interfaceBuilder(service.name)
+    private fun buildServiceType(service: ServiceDescriptor, parameters: Map<String, String>) =
+        TypeSpec.interfaceBuilder(service.name.toClassName(parameters = parameters, suffix = "Def"))
             .apply { addFunctions(buildFunctions(service, parameters)) }
             .build()
 
-    private fun buildFunctions(service: Descriptors.ServiceDescriptor, parameters: Map<String, String>): List<FunSpec> =
+    private fun buildFunctions(service: ServiceDescriptor, parameters: Map<String, String>): List<FunSpec> =
         service.methods
             .map { method ->
                 FunSpec.builder(method.methodName.toMemberSimpleName())
-                    .addModifiers(KModifier.ABSTRACT)
-                    .addParameter(buildFunctionParameter(method, parameters))
+                    .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
+                    .addParameters(buildFunctionParameters(method, parameters))
                     .apply {
-                        val className = ClassName(
-                            method.outputType.file.`package`.toPackageName(parameters),
-                            method.outputType.messageClassSimpleName.name
-                        )
-                        if (!className.isProtobufEmptyType()) {
-                            returns(className)
+                        if (!method.isProtobufEmptyType()) {
+                            val returnType = ClassName(
+                                method.outputType.file.`package`.toPackageName(parameters),
+                                method.outputType.messageClassSimpleName.name.toClassName(parameters)
+                            )
+                            if (method.isServerStreaming) {
+                                returns(flowClassName.parameterizedBy(returnType))
+                            } else {
+                                returns(returnType)
+                            }
                         }
                     }
                     .build()
             }
 
-    private fun buildMessageType(descriptor: Descriptors.Descriptor, parameters: Map<String, String>): TypeSpec {
+    private fun buildMessageType(descriptor: Descriptor, parameters: Map<String, String>): TypeSpec {
         val constructorParameters = buildMessageTypeConstructorParameters(descriptor, parameters)
         val properties = buildMessageTypeProperties(descriptor, parameters)
-        return TypeSpec.classBuilder(descriptor.simpleName.name)
+        return TypeSpec.classBuilder(descriptor.simpleName.name.toClassName(parameters))
             .apply {
                 if (constructorParameters.isNotEmpty()) {
                     addModifiers(KModifier.DATA)
@@ -74,39 +82,60 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
             .build()
     }
 
-    private fun buildEnumType(descriptor: EnumDescriptor): TypeSpec =
-        TypeSpec.enumBuilder(descriptor.simpleName.name)
+    private fun buildEnumType(descriptor: EnumDescriptor, parameters: Map<String, String>): TypeSpec =
+        TypeSpec.enumBuilder(descriptor.simpleName.name.toClassName(parameters))
             .apply {
                 descriptor.values
                     .forEach { enumValue -> addEnumConstant(enumValue.name) }
             }
             .build()
 
-    private fun buildFunctionParameter(method: Descriptors.MethodDescriptor, parameters: Map<String, String>): ParameterSpec =
-        ParameterSpec(
-            "input",
-            ClassName(
-                method.inputType.file.`package`.toPackageName(parameters),
-                method.inputType.messageClassSimpleName.name
+    private fun buildFunctionParameters(
+        method: MethodDescriptor,
+        parameters: Map<String, String>
+    ): List<ParameterSpec> =
+        if (method.isClientStreaming) {
+            listOf(
+                ParameterSpec(
+                    "input",
+                    flowClassName
+                        .parameterizedBy(
+                            ClassName(
+                                method.inputType.file.`package`.toPackageName(parameters),
+                                method.inputType.messageClassSimpleName.name.toClassName(parameters)
+                            )
+                        )
+                )
             )
-        )
+        } else {
+            method.inputType
+                .fields
+                .map { field ->
+                    ParameterSpec(
+                        field.fieldName.javaSimpleName.name,
+                        field.asClassName(parameters)
+                    )
+                }
+        }
 
     private fun buildMessageTypeConstructorParameters(
-        descriptor: Descriptors.Descriptor,
+        descriptor: Descriptor,
         parameters: Map<String, String>
     ) =
         descriptor
             .fields
             .map { field ->
-                ParameterSpec
-                    .builder(
-                        field.fieldName.javaSimpleName.name,
-                        field.asClassName(parameters)
-                    )
-                    .build()
+                ParameterSpec(
+                    field.fieldName.javaSimpleName.name,
+                    field.asClassName(parameters)
+                        .copy(nullable = field.isOptional)
+                )
             }
 
-    private fun buildMessageTypeProperties(descriptor: Descriptors.Descriptor, parameters: Map<String, String>): List<PropertySpec> =
+    private fun buildMessageTypeProperties(
+        descriptor: Descriptor,
+        parameters: Map<String, String>
+    ): List<PropertySpec> =
         descriptor
             .fields
             .map { field ->
@@ -114,48 +143,64 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .builder(
                         field.fieldName.javaSimpleName.name,
                         field.asClassName(parameters)
+                            .copy(nullable = field.isOptional)
                     )
                     .initializer(field.fieldName.javaSimpleName.name)
                     .build()
             }
 
-    private fun Descriptors.FieldDescriptor.asClassName(parameters: Map<String, String>): TypeName =
-        when (javaType) {
-            Descriptors.FieldDescriptor.JavaType.MESSAGE -> if (isMapField) {
-                ClassName("kotlin.collections", "Map")
-                    .parameterizedBy(
-                        messageType.findFieldByName("key").asClassName(parameters),
-                        messageType.findFieldByName("value").asClassName(parameters)
+    private fun FieldDescriptor.asClassName(parameters: Map<String, String>): TypeName =
+        if (isMapField) {
+            ClassName("kotlin.collections", "Map")
+                .parameterizedBy(
+                    messageType.findFieldByName("key").asClassName(parameters),
+                    messageType.findFieldByName("value").asClassName(parameters)
+                )
+        } else {
+            when (javaType) {
+                FieldDescriptor.JavaType.MESSAGE ->
+                    ClassName(
+                        messageType.file.`package`.toPackageName(parameters),
+                        messageType.messageClassSimpleName.name.toClassName(parameters)
                     )
-            } else {
-                ClassName(
-                    messageType.file.`package`.toPackageName(parameters),
-                    messageType.messageClassSimpleName.name
-                )
+                FieldDescriptor.JavaType.ENUM ->
+                    ClassName(
+                        enumType.file.`package`.toPackageName(parameters),
+                        enumType.enumClassSimpleName.name.toClassName(parameters)
+                    )
+                FieldDescriptor.JavaType.INT ->
+                    ClassName("kotlin", "Int")
+                FieldDescriptor.JavaType.FLOAT ->
+                    ClassName("kotlin", "Float")
+                FieldDescriptor.JavaType.DOUBLE ->
+                    ClassName("kotlin", "Double")
+                FieldDescriptor.JavaType.LONG ->
+                    ClassName("kotlin", "Long")
+                FieldDescriptor.JavaType.STRING ->
+                    ClassName("kotlin", "String")
+                FieldDescriptor.JavaType.BOOLEAN ->
+                    ClassName("kotlin", "Boolean")
+                FieldDescriptor.JavaType.BYTE_STRING ->
+                    ClassName("kotlin", "ByteString")
+                else -> throw IllegalStateException("unable to parse field '${name}' type")
             }
-            Descriptors.FieldDescriptor.JavaType.ENUM ->
-                ClassName(
-                    enumType.file.`package`.toPackageName(parameters),
-                    enumType.enumClassSimpleName.name
-                )
-            Descriptors.FieldDescriptor.JavaType.INT ->
-                ClassName("kotlin", "Int")
-            Descriptors.FieldDescriptor.JavaType.FLOAT ->
-                ClassName("kotlin", "Float")
-            Descriptors.FieldDescriptor.JavaType.DOUBLE ->
-                ClassName("kotlin", "Double")
-            Descriptors.FieldDescriptor.JavaType.LONG ->
-                ClassName("kotlin", "Long")
-            Descriptors.FieldDescriptor.JavaType.STRING ->
-                ClassName("kotlin", "String")
-            Descriptors.FieldDescriptor.JavaType.BOOLEAN ->
-                ClassName("kotlin", "Boolean")
-            Descriptors.FieldDescriptor.JavaType.BYTE_STRING ->
-                ClassName("kotlin", "ByteString")
-            else -> throw IllegalStateException("unable to parse field '${name}' type")
+                .run {
+                    if (isRepeated) {
+                        ClassName("kotlin.collections", "List")
+                            .parameterizedBy(
+                                this
+                            )
+                    } else this
+                }
         }
 
-    private fun ClassName.isProtobufEmptyType() =
-        packageName == "google.protobuf"
-                && simpleName == "Empty"
+    private fun MethodDescriptor.isProtobufEmptyType() =
+        ClassName(
+            outputType.file.`package`,
+            outputType.messageClassSimpleName.name
+        )
+            .run {
+                packageName == "google.protobuf"
+                        && simpleName == "Empty"
+            }
 }
