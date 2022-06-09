@@ -7,8 +7,8 @@ import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import io.grpc.kotlin.generator.CodeGenerator
 import io.grpc.kotlin.generator.inputPackageParameterName
-import io.grpc.kotlin.generator.outputPackageReplacementParameterName
 import io.grpc.kotlin.generator.protoc.*
+import io.grpc.kotlin.generator.toPackageName
 
 class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config) {
 
@@ -158,12 +158,4 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
     private fun ClassName.isProtobufEmptyType() =
         packageName == "google.protobuf"
                 && simpleName == "Empty"
-
-    private fun String.toPackageName(parameters: Map<String, String>): String =
-        if (parameters.containsKey(outputPackageReplacementParameterName)) {
-            val regex = parameters[outputPackageReplacementParameterName]!!.split("/")
-            replace(Regex(regex.first()), regex.last())
-        } else {
-            this
-        }
 }
