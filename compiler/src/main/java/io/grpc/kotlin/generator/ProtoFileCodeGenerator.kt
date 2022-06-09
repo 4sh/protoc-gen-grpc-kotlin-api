@@ -36,6 +36,7 @@ class ProtoFileCodeGenerator(
 
     fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec? = with(config) {
         val typeName = ClassSimpleName(fileDescriptor.file.toProto().options.javaOuterClassname)
+            .withSuffix(topLevelSuffix)
 
         val packageName = javaPackage(fileDescriptor)
             .let { it.copy(pkg = it.pkg.toPackageName(parameters)) }
