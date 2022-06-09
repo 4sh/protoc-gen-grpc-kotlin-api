@@ -5,8 +5,8 @@ const val outputPackageReplacementParameterName = "outputPackageReplacement"
 
 fun String.toPackageName(parameters: Map<String, String>): String =
     if (parameters.containsKey(outputPackageReplacementParameterName)) {
-        val regex = parameters[outputPackageReplacementParameterName]!!.split("/")
-        replace(Regex(regex.first()), regex.last())
+        val replacement = parameters[outputPackageReplacementParameterName]!!.split("/")
+        replace(replacement.first(), replacement.last())
     } else {
         this
     }
