@@ -18,10 +18,10 @@ package io.grpc.kotlin.generator
 
 import com.google.protobuf.Descriptors.FileDescriptor
 import com.squareup.kotlinpoet.FileSpec
+import io.grpc.kotlin.generator.protoc.ClassSimpleName
 import io.grpc.kotlin.generator.protoc.GeneratorConfig
 import io.grpc.kotlin.generator.protoc.builder
 import io.grpc.kotlin.generator.protoc.declarations
-import io.grpc.kotlin.generator.protoc.outerClassSimpleName
 
 /**
  * Given a list of [CodeGenerator] factories, generates (optionally) a [FileSpec] of the
@@ -35,11 +35,11 @@ class ProtoFileCodeGenerator(
     private val generators = generators.map { it(config) }
 
     fun generateCodeForFile(fileDescriptor: FileDescriptor, parameters: Map<String, String>): FileSpec? = with(config) {
-        val outerTypeName = fileDescriptor.outerClassSimpleName.withSuffix(topLevelSuffix)
+        val typeName = ClassSimpleName(fileDescriptor.file.toProto().options.javaOuterClassname)
 
         val packageName = javaPackage(fileDescriptor)
             .let { it.copy(pkg = it.pkg.toPackageName(parameters)) }
-        val fileBuilder = FileSpec.builder(packageName, outerTypeName)
+        val fileBuilder = FileSpec.builder(packageName, typeName)
 
         val decls = declarations {
             for (generator in generators) {
