@@ -133,7 +133,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .builder(
                         fieldName,
                         field.asClassName(parameters)
-                            .copy(nullable = field.isOptional)
+                            .copy(nullable = field.isOptional || field.isRepeated)
                     )
                     .build()
             }
@@ -150,7 +150,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .builder(
                         fieldName,
                         field.asClassName(parameters)
-                            .copy(nullable = field.isOptional)
+                            .copy(nullable = field.isOptional || field.isRepeated)
                     )
                     .run {
                         if (fieldName == "id") {
