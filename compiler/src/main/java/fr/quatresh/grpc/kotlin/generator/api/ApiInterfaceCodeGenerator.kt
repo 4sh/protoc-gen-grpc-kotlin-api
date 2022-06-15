@@ -89,10 +89,8 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
         TypeSpec.enumBuilder(descriptor.simpleName.name.toClassName(parameters))
             .apply {
                 descriptor.values
+                    .drop(1)
                     .forEach { enumValue -> addEnumConstant(enumValue.name) }
-            }
-            .apply {
-                addEnumConstant("UNRECOGNIZED")
             }
             .apply {
                 buildEnumSuperInterfaceName(parameters)
