@@ -92,6 +92,9 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .forEach { enumValue -> addEnumConstant(enumValue.name) }
             }
             .apply {
+                addEnumConstant("UNRECOGNIZED")
+            }
+            .apply {
                 buildEnumSuperInterfaceName(parameters)
                     ?.also { addSuperinterface(it) }
             }
