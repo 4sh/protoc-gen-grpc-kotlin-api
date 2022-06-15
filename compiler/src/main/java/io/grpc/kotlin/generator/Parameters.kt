@@ -5,7 +5,8 @@ import com.squareup.kotlinpoet.ClassName
 const val inputPackageParameterName = "inputPackage"
 const val outputPackageReplacementParameterName = "outputPackageNameReplacement"
 const val outputClassNameReplacementParameterName = "outputClassNameReplacement"
-const val baseClassNameParameterName = "baseClassName"
+const val baseClassSuperInterfaceNameParameterName = "baseClassSuperinterfaceName"
+const val baseEnumSuperInterfaceNameParameterName = "baseEnumSuperinterfaceName"
 
 fun String.toPackageName(parameters: Map<String, String>): String =
     if (parameters.containsKey(outputPackageReplacementParameterName)) {
@@ -23,11 +24,20 @@ fun String.toClassName(parameters: Map<String, String>, suffix: String = "ApiDef
         this
     }.plus(suffix)
 
-fun buildBaseClassName(parameters: Map<String, String>): ClassName? =
-    if (parameters.containsKey(baseClassNameParameterName)) {
-        val baseClassName = parameters[baseClassNameParameterName]!!
+fun buildClassSuperInterfaceName(parameters: Map<String, String>): ClassName? =
+    if (parameters.containsKey(baseClassSuperInterfaceNameParameterName)) {
+        val baseInterfaceName = parameters[baseClassSuperInterfaceNameParameterName]!!
         ClassName(
-            baseClassName.substringBeforeLast("."),
-            baseClassName.substringAfterLast(".")
+            baseInterfaceName.substringBeforeLast("."),
+            baseInterfaceName.substringAfterLast(".")
+        )
+    } else null
+
+fun buildEnumSuperInterfaceName(parameters: Map<String, String>): ClassName? =
+    if (parameters.containsKey(baseEnumSuperInterfaceNameParameterName)) {
+        val baseInterfaceName = parameters[baseEnumSuperInterfaceNameParameterName]!!
+        ClassName(
+            baseInterfaceName.substringBeforeLast("."),
+            baseInterfaceName.substringAfterLast(".")
         )
     } else null

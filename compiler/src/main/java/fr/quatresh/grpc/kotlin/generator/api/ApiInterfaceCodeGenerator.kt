@@ -72,7 +72,7 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
             }
             .apply {
                 if (constructorParameters.any { it.name == "id" }) {
-                    buildBaseClassName(parameters)
+                    buildClassSuperInterfaceName(parameters)
                         ?.also { addSuperinterface(it) }
                 }
             }
@@ -90,6 +90,10 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
             .apply {
                 descriptor.values
                     .forEach { enumValue -> addEnumConstant(enumValue.name) }
+            }
+            .apply {
+                buildEnumSuperInterfaceName(parameters)
+                    ?.also { addSuperinterface(it) }
             }
             .build()
 
