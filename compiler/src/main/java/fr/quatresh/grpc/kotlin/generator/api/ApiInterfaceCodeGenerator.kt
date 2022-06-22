@@ -138,7 +138,6 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .builder(
                         fieldName,
                         field.asClassName(parameters)
-                            .copy(nullable = field.isOptional || field.isRepeated)
                     )
                     .build()
             }
@@ -155,7 +154,6 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     .builder(
                         fieldName,
                         field.asClassName(parameters)
-                            .copy(nullable = field.isOptional || field.isRepeated)
                     )
                     .run {
                         if (fieldName == "id") {
@@ -210,6 +208,10 @@ class ApiInterfaceCodeGenerator(config: GeneratorConfig) : CodeGenerator(config)
                     } else this
                 }
         }
+            .copy(nullable = isOptionalOrRepeated())
+
+    private fun FieldDescriptor.isOptionalOrRepeated() =
+        hasOptionalKeyword() || isRepeated
 
     private fun MethodDescriptor.isProtobufEmptyType() =
         ClassName(

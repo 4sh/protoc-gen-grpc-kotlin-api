@@ -1,5 +1,6 @@
 rootProject.name = "protoc-gen-grpc-kotlin-api"
 
 include(
-    "compiler"
+    "compiler",
+    "tests",
 )

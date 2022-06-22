@@ -9,9 +9,6 @@ application {
 }
 
 dependencies {
-    // Kotlin and Java
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${rootProject.ext["coroutinesVersion"]}")
-
     // Grpc and Protobuf
     implementation("io.grpc:grpc-protobuf:${rootProject.ext["grpcVersion"]}")
 
