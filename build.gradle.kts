@@ -5,7 +5,7 @@ plugins {
     id("com.google.protobuf") version "0.8.18" apply false
 }
 
-group = "fr.quatresh"
+group = "com.izivia"
 version = "1.0.18"
 
 ext["grpcVersion"] = "1.46.0"
@@ -43,12 +43,12 @@ subprojects {
     extensions.getByType<PublishingExtension>().publications {
         create<MavenPublication>("maven") {
             pom {
-                url.set("https://github.com/4sh/protoc-gen-grpc-kotlin-api")
+                url.set("https://github.com/IZIVIA/protoc-gen-grpc-kotlin-api")
 
                 scm {
-                    connection.set("scm:git:https://github.com/4sh/protoc-gen-grpc-kotlin-api.git")
-                    developerConnection.set("scm:git:git@github.com:4sh/protoc-gen-grpc-kotlin-api.git")
-                    url.set("https://github.com/4sh/protoc-gen-grpc-kotlin-api")
+                    connection.set("scm:git:https://github.com/IZIVIA/protoc-gen-grpc-kotlin-api.git")
+                    developerConnection.set("scm:git:git@github.com:IZIVIA/protoc-gen-grpc-kotlin-api.git")
+                    url.set("https://github.com/IZIVIA/protoc-gen-grpc-kotlin-api")
                 }
 
                 licenses {

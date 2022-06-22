@@ -1,4 +1,4 @@
-package fr.quatresh.grpc.kotlin.generator.api
+package com.izivia.grpc.kotlin.generator.api
 
 import com.google.protobuf.Descriptors.*
 import com.squareup.kotlinpoet.*

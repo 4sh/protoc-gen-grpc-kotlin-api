@@ -17,8 +17,8 @@
 package io.grpc.kotlin.generator
 
 import com.google.protobuf.Descriptors.FileDescriptor
+import com.izivia.grpc.kotlin.generator.api.ApiInterfaceCodeGenerator
 import com.squareup.kotlinpoet.FileSpec
-import fr.quatresh.grpc.kotlin.generator.api.ApiInterfaceCodeGenerator
 import io.grpc.kotlin.generator.protoc.AbstractGeneratorRunner
 import io.grpc.kotlin.generator.protoc.GeneratorConfig
 import io.grpc.kotlin.generator.protoc.JavaPackagePolicy
