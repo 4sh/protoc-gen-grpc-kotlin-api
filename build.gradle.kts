@@ -6,10 +6,10 @@ plugins {
 }
 
 group = "fr.quatresh"
-version = "1.0.16"
+version = "1.0.17"
 
-ext["grpcVersion"] = "1.47.0"
-ext["protobufVersion"] = "3.21.1"
+ext["grpcVersion"] = "1.46.0"
+ext["protobufVersion"] = "3.20.1"
 
 subprojects {
 
